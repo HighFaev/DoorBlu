@@ -2,7 +2,9 @@
 #include <Servo.h>
 #include <Wire.h> 
 #include <Keypad.h>
- 
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C LCD(0x27,4,5);
 SoftwareSerial mySerial(5, 4); // RX, TX
 Servo myServo;
  
@@ -12,6 +14,9 @@ bool Open = false;
 bool tapped = false;
 int ledRedPin = 2;
 int ledGreenPin = 3; 
+int stage_display = 0;
+float time_left = 0.0;
+
 
 #define Password_Length 6 
 char Data[Password_Length]; 
@@ -31,6 +36,19 @@ char hexaKeys[ROWS][COLS] = {
   {'*', '0', '#', 'D'}
 };
 
+byte Heart[] = {
+  B00000,
+  B01010,
+  B11111,
+  B11111,
+  B01110,
+  B00100,
+  B00000,
+  B00000
+};
+
+
+
 byte rowPins[ROWS] = {7, 8, 9, 14};
 byte colPins[COLS] = {10, 11, 12, 15};
 
@@ -40,6 +58,13 @@ Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS)
  
 void setup()
 {
+  LCD.init(); 
+  LCD.backlight();
+  LCD.begin(16, 2);
+
+  // Create new characters:
+  LCD.createChar(0, Heart);
+  
   pinMode(ledRedPin, OUTPUT);
   pinMode(ledGreenPin, OUTPUT);     
   pinMode(buttonPin, INPUT);
@@ -62,6 +87,31 @@ void setup()
  
 void loop() // run over and over
 {
+  
+  switch(stage_display){
+     case 0:
+        LCD.clear();
+        LCD.setCursor(0, 0);
+        LCD.print("WELCOME HOME"); 
+        LCD.setCursor(6, 1);  
+        LCD.print("-DOORBLU");
+        LCD.write(byte(0));
+        stage_display = 1;
+        delay(2000);
+        break;
+     case 1:
+        LCD.clear();
+        LCD.setCursor(0, 0);
+        LCD.print("DOORBLU"); 
+        LCD.setCursor(0, 1);  
+        LCD.print("WAITING FOR USER");
+        stage_display = 999;
+        break;
+     
+     default:
+        break;
+  }
+
   customKey = customKeypad.getKey();
   if (customKey){
     if (door_open){
